@@ -51,34 +51,34 @@ public:
             //
             // Penalty on SDR relay
             //
-            utils->SetGlobalConfigValueInt32(
-                k_ESteamNetworkingConfig_P2P_Transport_SDR_Penalty,
-                99999999);
+            // utils->SetGlobalConfigValueInt32(
+            //     k_ESteamNetworkingConfig_P2P_Transport_SDR_Penalty,
+            //     99999999);
             
-            utils->SetGlobalConfigValueInt32(
-                k_ESteamNetworkingConfig_P2P_Transport_ICE_Penalty,
-                0);
+            // utils->SetGlobalConfigValueInt32(
+            //     k_ESteamNetworkingConfig_P2P_Transport_ICE_Penalty,
+            //     0);
 
             //
             // Enable ICE
             //
-            utils->SetGlobalConfigValueInt32(
-                k_ESteamNetworkingConfig_P2P_Transport_ICE_Enable,
-                k_nSteamNetworkingConfig_P2P_Transport_ICE_Enable_All);
+            // utils->SetGlobalConfigValueInt32(
+            //     k_ESteamNetworkingConfig_P2P_Transport_ICE_Enable,
+            //     k_nSteamNetworkingConfig_P2P_Transport_ICE_Enable_All);
 
             //
             // Single UDP socket
             //
-            utils->SetGlobalConfigValueInt32(
-                k_ESteamNetworkingConfig_SDRClient_SingleSocket,
-                1);
+            // utils->SetGlobalConfigValueInt32(
+            //     k_ESteamNetworkingConfig_SDRClient_SingleSocket,
+            //     1);
 
             //
             // LAN Discovery
             //
-            utils->SetGlobalConfigValueInt32(
-                k_ESteamNetworkingConfig_IP_AllowWithoutAuth,
-                1);
+            // utils->SetGlobalConfigValueInt32(
+            //     k_ESteamNetworkingConfig_IP_AllowWithoutAuth,
+            //     1);
 
             //
             // Debug
@@ -216,6 +216,7 @@ public:
 
         cout << "[UI] Opening invite overlay\n";
         SteamFriends()->ActivateGameOverlayInviteDialog(m_lobby);
+        cout << "[UI] Overlay may be disabled. Invite your friends manually in Steam.\n";
     }
 
     void SendChat(const std::string &text)
