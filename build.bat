@@ -34,7 +34,7 @@ if not exist "./build/steamwebrtc64.dll" (
     exit /b 1
 )
 
-cl.exe src\main.cpp /EHsc /std:c++17 /O2 /DNDEBUG /I "%SDK%\public" /utf-8 /nologo .\build\steam_api64.lib /Fe.\build\app.exe
+cl.exe src\main.cpp src\net.cpp src\lobby.cpp /EHsc /std:c++17 /O2 /DNDEBUG /I "%SDK%\public" /utf-8 /nologo .\build\steam_api64.lib /Fe.\build\app.exe
 
 if errorlevel 1 (
     echo Error: Build failed.
