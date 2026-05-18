@@ -1,6 +1,8 @@
 #include "app.h"
 #include "log.h"
 
+#include <cstring>
+
 void SteamP2PApp::EnsureListenSocketLocked()
 {
     if (m_listenSocket != k_HSteamListenSocket_Invalid)
@@ -149,6 +151,19 @@ void SteamP2PApp::PollIncomingMessages()
         {
             SteamNetworkingMessage_t *msg = msgs[i];
 
+            // Route stress packets by magic header
+            if (msg->m_cbSize >= 4)
+            {
+                uint32_t magic = 0;
+                std::memcpy(&magic, msg->m_pData, 4);
+                if (magic == kStressMagic)
+                {
+                    HandleStressPacket(msg->m_conn, msg->m_pData, static_cast<uint32_t>(msg->m_cbSize));
+                    msg->Release();
+                    continue;
+                }
+            }
+
             uint64_t peerSteamId = 0;
             auto it = m_connToSteamId.find(msg->m_conn);
             if (it != m_connToSteamId.end())
@@ -207,7 +222,7 @@ void SteamP2PApp::PumpPendingTimeoutsLocked()
         TryConnectToLobbyOwnerLocked();
 }
 
-// callbacks for SetGlobalCallback_SteamNetConnectionStatusChanged 
+// callbacks for SetGlobalCallback_SteamNetConnectionStatusChanged
 
 void SteamP2PApp::SteamNetConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t *pInfo)
 {

@@ -1,6 +1,8 @@
 #include "app.h"
 #include "log.h"
 
+#include <sstream>
+
 SteamP2PApp *SteamP2PApp::s_instance = nullptr;
 SteamP2PApp::SteamP2PApp()
     : m_cbLobbyEnter(this, &SteamP2PApp::OnLobbyEnter),
@@ -117,6 +119,7 @@ void SteamP2PApp::Tick()
     {
         std::lock_guard<std::recursive_mutex> lock(m_mutex);
         PumpPendingTimeoutsLocked();
+        PollStressRxTimeoutsLocked();
     }
 
     PollIncomingMessages();
@@ -144,6 +147,11 @@ void SteamP2PApp::Shutdown()
         m_pollGroup = k_HSteamNetPollGroup_Invalid;
     }
 
+    // safely stop stress thread
+    m_stressRunning = false;
+    if (m_stressThread.joinable())
+        m_stressThread.join();
+
     if (m_steamInitialized)
     {
         SteamAPI_Shutdown();
@@ -151,7 +159,7 @@ void SteamP2PApp::Shutdown()
     }
 }
 
-// Send Chat 
+// Send Chat
 void SteamP2PApp::SendChat(const std::string &text)
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
@@ -237,7 +245,7 @@ void SteamP2PApp::PrintConnectionInfo(HSteamNetConnection conn)
               << "Sent unreliable: " << rt.m_cbSentUnackedReliable << "\n";
     }
 
-    Log() << "=====================================\n\n";
+    Log() << "\n=====================================\n\n";
 }
 
 std::string SteamP2PApp::GetSteamName(uint64_t steamId64) const
@@ -332,7 +340,8 @@ int main()
                  "  info\n"
                  "  leave\n"
                  "  quit\n"
-                 "  <text>  send chat\n";
+                 "  stress <reliable|unreliable> <count> <bytes(>12)> <intervalMs>\n"
+                 "  <text> send chat\n";
 
         std::string line;
         while (running)
@@ -360,6 +369,17 @@ int main()
                 {
                     Log() << "[Error] Invalid lobby id\n";
                 }
+            }
+            else if (line.rfind("stress ", 0) == 0)
+            {
+                std::istringstream ss(line.substr(7));
+                std::string mode;
+                // DRG Client Peak PPS: ~108 pkt/s, Avg Tx Packet Size: ~50B
+                // DRG Host Peak PPS: ~80 pkt/s, Avg Tx Packet Size: ~250B
+                int count = 5000, bytes = 250, delayMs = 10;
+                ss >> mode >> count >> bytes >> delayMs;
+                const bool reliable = (mode == "reliable");
+                app.StartStressTest(reliable, count, bytes, delayMs);
             }
             else if (!line.empty())
             {
